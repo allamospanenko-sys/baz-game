@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>БАЗ — Дослідження ринку</title>
+<style>
+  :root{
+    --bg: #0b0c0f;
+    --bg-raised: #131519;
+    --bg-card: #16181d;
+    --border: #262a31;
+    --text: #e8e9ec;
+    --text-dim: #9aa0ab;
+    --text-faint: #6b7280;
+    --accent: #ffb020;
+    --accent-dim: #7a5a1a;
+    --good: #57c785;
+    --bad: #e15b5b;
+    --mono: "SF Mono", "Cascadia Code", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--sans); line-height:1.55; font-size:15px;
+  }
+  a{color:var(--accent); text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  header.hero{
+    padding:64px 24px 40px; border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, var(--bg-raised) 0%, var(--bg) 100%);
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px}
+  header.hero .wrap{padding:0}
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 12px;
+  }
+  h1{font-size:clamp(28px,4vw,42px); margin:0 0 12px; letter-spacing:-.01em}
+  .lede{color:var(--text-dim); max-width:640px; font-size:16px; margin:0}
+  .meta{margin-top:24px; display:flex; gap:20px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; color:var(--text-faint)}
+  .meta span b{color:var(--text-dim); font-weight:600}
+
+  nav.toc{
+    position:sticky; top:0; z-index:10; background:rgba(11,12,15,.92);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--border);
+  }
+  nav.toc .wrap{display:flex; gap:4px; overflow-x:auto; padding:0 24px}
+  nav.toc a{
+    display:block; padding:14px 16px; color:var(--text-dim); font-size:13px;
+    white-space:nowrap; border-bottom:2px solid transparent;
+  }
+  nav.toc a:hover{color:var(--text); text-decoration:none}
+  nav.toc a:target, nav.toc a.active{color:var(--text); border-bottom-color:var(--accent)}
+
+  section{padding:56px 0; border-bottom:1px solid var(--border)}
+  section:last-of-type{border-bottom:none}
+  section > .wrap > .section-head{margin-bottom:32px}
+  .section-num{font-family:var(--mono); color:var(--accent); font-size:13px; margin:0 0 8px}
+  h2{font-size:26px; margin:0 0 8px; letter-spacing:-.01em}
+  .section-sub{color:var(--text-dim); max-width:640px; margin:0}
+
+  h3{font-size:17px; margin:36px 0 12px; color:var(--text)}
+  h3:first-child{margin-top:0}
+  h4{font-size:14px; margin:24px 0 8px; color:var(--accent); font-family:var(--mono); text-transform:uppercase; letter-spacing:.04em}
+
+  .scrollbox{overflow-x:auto; border:1px solid var(--border); border-radius:10px; background:var(--bg-card)}
+  table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:640px}
+  th, td{text-align:left; padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:top}
+  thead th{
+    background:var(--bg-raised); color:var(--text-dim); font-weight:600;
+    font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+    position:sticky; top:0;
+  }
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:rgba(255,255,255,.02)}
+  td b, td strong{color:var(--text)}
+  .num-cell{font-family:var(--mono); font-weight:600}
+  .num-5{color:var(--good)} .num-1{color:var(--bad)} .num-na{color:var(--text-faint)}
+
+  .card{background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:20px 22px; margin-bottom:14px}
+  .card p:last-child{margin-bottom:0}
+  .callout{
+    margin-top:10px; padding:10px 14px; background:var(--bg-raised);
+    border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+    font-size:13.5px; color:var(--text-dim);
+  }
+  .callout b{color:var(--accent); font-weight:600}
+
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media (max-width:760px){.grid-2{grid-template-columns:1fr}}
+
+  .pill{
+    display:inline-block; font-family:var(--mono); font-size:11px;
+    padding:2px 8px; border-radius:99px; border:1px solid var(--border);
+    color:var(--text-faint); margin-bottom:10px;
+  }
+
+  .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; margin-top:20px}
+  figure{margin:0; background:var(--bg-card); border:1px solid var(--border); border-radius:10px; overflow:hidden}
+  figure img{width:100%; display:block; aspect-ratio:16/10; object-fit:cover; background:var(--bg-raised)}
+  figcaption{padding:10px 12px; font-size:12px; color:var(--text-dim); font-family:var(--mono); line-height:1.4}
+  figcaption .flag{color:var(--accent)}
+
+  .insight{
+    background:linear-gradient(135deg, var(--bg-card), var(--bg-raised));
+    border:1px solid var(--accent-dim); border-radius:12px; padding:24px 26px;
+  }
+  .insight .eyebrow{margin-bottom:10px}
+  .insight p{margin:0; font-size:15.5px}
+
+  ol.numbered, ul.plain{padding-left:0; list-style:none; margin:0}
+  ol.numbered li, ul.plain li{
+    counter-increment:item; position:relative; padding-left:40px; margin-bottom:16px;
+  }
+  ol.numbered{counter-reset:item}
+  ol.numbered li::before{
+    content:counter(item); position:absolute; left:0; top:-1px;
+    font-family:var(--mono); font-size:13px; color:var(--accent);
+    width:26px; height:26px; border:1px solid var(--accent-dim); border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .wontwork{border-color:var(--bad); background:rgba(225,91,91,.06)}
+  .wontwork .eyebrow{color:var(--bad)}
+
+  footer{padding:32px 0 64px; color:var(--text-faint); font-size:13px}
+  footer a{color:var(--text-dim)}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Продукт БАЗ · Дослідження</p>
+    <h1>Що вже знає ринок про "вгадай мелодію на вечірці"</h1>
+    <p class="lede">Конкурентний аналіз, бенчмарк ключових механік і продуктові висновки — зібрано з живого проходження продуктів (Playwright), UX-статей і офіційної документації.</p>
+    <div class="meta">
+      <span><b>7</b> продуктів у бенчмарку</span>
+      <span><b>12</b> позицій у конкурентних групах</span>
+      <span><b>15</b> скріншотів</span>
+      <span>Оновлено 2026-09-03</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#konkurenty">01 · Конкуренти</a>
+    <a href="#benchmark">02 · Бенчмарк</a>
+    <a href="#patterny">03 · Патерни</a>
+    <a href="#vysnovky">04 · Висновки</a>
+  </div>
+</nav>
+
+<!-- ================= 01 KONKURENTY ================= -->
+<section id="konkurenty">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="section-num">01</p>
+      <h2>Конкуренти</h2>
+      <p class="section-sub">Три групи, макс. 5 у кожній: хто вже займає цю нішу в Україні, хто вирішує ту саму задачу інакше, і на кого рівнятись у категорії загалом.</p>
+    </div>
+
+    <h3>ХАРД — Україна, той самий продукт + аудиторія</h3>
+    <div class="scrollbox">
+      <table>
+        <thead><tr><th style="width:18%">Назва</th><th style="width:16%">Тип</th><th>Чому в цій групі</th><th>Що вивчити</th></tr></thead>
+        <tbody>
+          <tr><td><b>GuessSong.app</b> (+ Music Quizly, Spotiguess)</td><td>веб-застосунок</td><td>Найближча форма до БАЗ: чужий плейліст → фрагмент → компанія вигукує відповідь. Доступний українцям без локалізації.</td><td>Немає окремих баззерів на телефоні — хост вирішує на слух, хто перший. Перевірити, чи мережевий баззер взагалі потрібен у MVP.</td></tr>
+          <tr><td><b>Music Quiz</b>, ArtMuz'Company (Київ)</td><td>жива послуга (діджей+ведучий)</td><td>Той самий ринок і оказія — компанія вгадує музику на заході, просто без застосунку.</td><td>Структура сценарію вечора, прайсинг — орієнтир цінності "музичного вечора".</td></tr>
+          <tr><td><b>WebQuiz.net</b>, розділ "Музика"</td><td>укр. онлайн-сервіс вікторин</td><td>Україномовний інтерфейс, той самий JTBD "вгадай виконавця/трек".</td><td>Чи є груповий режим, чи виключно соло — сигнал звички ринку.</td></tr>
+          <tr><td><b>PubQuiz Kyiv</b></td><td>офлайн бар-вікторини</td><td>Та сама аудиторія і суботньо-вечірня оказія, хоч і не music-specific.</td><td>Темп раунду й формування команд у живому форматі.</td></tr>
+          <tr><td><b>Hitster</b> (продається в Україні)</td><td>настільна гра + застосунок</td><td>Активно купується для вечірок — реальний конкурент за час/бюджет компанії.</td><td>QR у власному Spotify замість хостингу аудіо — обхід ліцензійних проблем.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>СОФТ — інший продукт, той самий JTBD "вгадати трек"</h3>
+    <div class="scrollbox">
+      <table>
+        <thead><tr><th style="width:18%">Назва</th><th style="width:16%">Тип</th><th>Чому в цій групі</th><th>Що вивчити</th></tr></thead>
+        <tbody>
+          <tr><td><b>SongPop</b></td><td>мобільний застосунок</td><td>10+ років ринку, той самий core loop, але власний каталог, не чужий плейліст.</td><td>Retention-механіки (Marathon Mode, річний recap).</td></tr>
+          <tr><td><b>Kahoot!</b>, музичні шаблони</td><td>quiz-платформа</td><td>Та сама device-топологія (екран+пульт), але універсальний інструмент, не music-first.</td><td>Join-flow: код кімнати без реєстрації — архітектура host/player view.</td></tr>
+          <tr><td><b>«Вгадай мелодію»</b> (Sweet.tv, 2026)</td><td>телешоу</td><td>Та сама культурна метафора, але продукт для глядачів, не гравців.</td><td>Чи з'явиться second-screen застосунок — сигнал попиту в Україні.</td></tr>
+          <tr><td><b>Heardle</b> (закритий 2023) + клони</td><td>соло-вебгра (Wordle-формат)</td><td>Той самий JTBD, асинхронна соло-гра без компанії.</td><td>Закрився через залежність від ліцензованих кліпів — див. "Головний інсайт".</td></tr>
+          <tr><td><b>Deezer "Музичний квіз"</b></td><td>фіча стрімінгу</td><td>Той самий JTBD, фіча для утримання підписників.</td><td>Великі стрімінги можуть додати власну guess-фічу — закладати незалежність.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>АСПІРАЦІЙНІ — міжнародні еталони категорії</h3>
+    <div class="scrollbox">
+      <table>
+        <thead><tr><th style="width:18%">Назва</th><th style="width:16%">Тип</th><th>Чому в цій групі</th><th>Що вивчити</th></tr></thead>
+        <tbody>
+          <tr><td><b>Hitster</b> (30+ країн)</td><td>настільна гра-франшиза</td><td>Категорієутворюючий продукт для емоції "стоп, це твоє?" — глобальний масштаб без застосунку.</td><td>Проста фізична механіка перемогла складніші цифрові аналоги — урок мінімалізму.</td></tr>
+          <tr><td><b>Spotify Jam / Blend</b></td><td>нативна фіча стрімінгу</td><td>Еталон "шерінгу музики" — чужий смак як спільний продукт-момент.</td><td>Onboarding друзів у спільну сесію за секунди.</td></tr>
+          <tr><td><b>Kahoot!</b></td><td>edtech/party quiz, мільярди сесій</td><td>Еталон тієї самої device-топології, що й БАЗ.</td><td>Синхронізація при десятках одночасних відповідей на слабкому Wi-Fi.</td></tr>
+          <tr><td><b>Turntable.fm → JQBX</b> (обидва закриті)</td><td>синхронні кімнати прослуховування</td><td>Історичний еталон — і кейс поганого утримання engagement.</td><td>Чому обидва зникли — пастки для довгострокового виходу за межі "один вечір".</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 02 BENCHMARK ================= -->
+<section id="benchmark">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="section-num">02</p>
+      <h2>Бенчмарк</h2>
+      <p class="section-sub">Живе проходження (Playwright) семи продуктів за шістьма осями, і окремий глибокий розріз одного виміру — тягаря хоста — ще на п'яти.</p>
+    </div>
+
+    <h3>7 продуктів × 6 осей</h3>
+    <p class="pill">[?] = ключовий екран за логіном/оплатою — оцінка на джерелах, не на живому проходженні</p>
+    <div class="scrollbox">
+      <table>
+        <thead><tr><th>Продукт</th><th>Аудиторія</th><th>Основа продукту</th><th>Ключовий механізм</th><th>Довіра</th><th>Монетизація</th></tr></thead>
+        <tbody>
+          <tr><td><b>GuessSong.app</b></td><td>Будь-хто з посиланням на плейліст, глобально, без реєстрації</td><td>Open-source, спільна квота Spotify API</td><td>Плейліст → кліп 15с → вигук+тап АБО per-player Buzzer Mode; є Mixed Playlist Mode з бонусом за вгадування власника</td><td>[?] Публічний банер вичерпання квоти в реальному часі</td><td>Немає — безкоштовний, "run your own copy"</td></tr>
+          <tr><td><b>WebQuiz.net</b></td><td>Україномовні соло-гравці</td><td>Фіксована редакційна бібліотека</td><td>20 питань, 15с кліп, множинний вибір, лайфлайни</td><td>Рейтинг 👍100% + лічильник проходжень</td><td>[?] "Coins" з попереднього огляду не підтвердились повторно</td></tr>
+          <tr><td><b>SongPop</b></td><td>Масовий мобільний гравець</td><td>Власний ліцензований каталог 100 000+ кліпів</td><td>Дуель/марафон, обмежений час на відповідь</td><td>3.2★/24.7K відгуків (⅓ — 1★); офіційний сайт запаркований на продаж</td><td>Реклама + підписка + gems $1.99–$99.99</td></tr>
+          <tr><td><b>Kahoot!</b></td><td>Від шкіл до корпоративів</td><td>Платформа-конструктор квізів</td><td>PIN без логіну для гравців; публічний Discover без реєстрації</td><td>Величезний освітній бренд, мільярди сесій</td><td>Хост платить One Max €19 / Ultra €35 / топ €39 на міс</td></tr>
+          <tr><td><b>Heardle</b></td><td>Соло-гравці, Wordle-хвиля 2022</td><td>Був окремий сайт, куплений Spotify</td><td>Прогресивно довші фрагменти (1→16с), 1 спроба/день</td><td>Мертвий: heardle.app веде напряму на open.spotify.com</td><td>Не було; закритий через брак приросту прослуховувань</td></tr>
+          <tr><td><b>Hitster</b></td><td>Компанії на вечірках, 30+ країн</td><td>Фізичні картки + застосунок-компаньйон</td><td>Timeline-механіка + інтерактивний плеєр-віджет на маркетинг-сайті</td><td>4.9★/3.4K в App Store, розробник Jumbo</td><td>Одноразова покупка + застосунок підштовхує до Spotify Premium</td></tr>
+          <tr><td><b>Spotify Jam/Blend</b></td><td>Наявні Spotify-користувачі-друзі</td><td>Нативна фіча всередині Spotify</td><td>Jam: до 32 людей керують плейлистом; Blend: авто-плейліст, до 10 друзів</td><td>[?] Недоступно без логіну+Premium — оцінка на офіційній довідці</td><td>Непряма — утримання Premium</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Глибокий розріз: "тягар хоста" (шкала 1–5, 5 = мінімальний тягар)</h3>
+    <div class="scrollbox">
+      <table>
+        <thead><tr><th>Критерій</th><th>WebQuiz.net</th><th>Kahoot!</th><th>GuessSong.app</th><th>Jackbox Party Pack</th><th>Heads Up!</th></tr></thead>
+        <tbody>
+          <tr><td>Швидкість старту</td><td class="num-cell num-1">1</td><td class="num-cell">3</td><td class="num-cell num-5">5</td><td class="num-cell">4</td><td class="num-cell num-5">5</td></tr>
+          <tr><td>Contentprep заздалегідь</td><td class="num-cell num-5">5</td><td class="num-cell">3</td><td class="num-cell num-1">2</td><td class="num-cell num-5">5</td><td class="num-cell num-5">5</td></tr>
+          <tr><td>Тех-збої/квота на хості</td><td class="num-cell num-na">—</td><td class="num-cell">4</td><td class="num-cell num-1">2</td><td class="num-cell">4</td><td class="num-cell num-5">5</td></tr>
+          <tr><td>Верифікація відповідей</td><td class="num-cell num-5">5</td><td class="num-cell num-5">5</td><td class="num-cell num-1">2</td><td class="num-cell">3</td><td class="num-cell num-1">1</td></tr>
+          <tr><td>Керування учасниками</td><td class="num-cell num-na">—</td><td class="num-cell num-5">5</td><td class="num-cell num-1">2</td><td class="num-cell">4</td><td class="num-cell num-5">5</td></tr>
+          <tr><td>Делегування ролі хоста</td><td class="num-cell num-na">—</td><td class="num-cell num-1">1</td><td class="num-cell num-1">2</td><td class="num-cell">2</td><td class="num-cell num-5">5</td></tr>
+          <tr><td>Когнітивне навантаження</td><td class="num-cell num-na">—</td><td class="num-cell">3</td><td class="num-cell num-1">2</td><td class="num-cell">4</td><td class="num-cell">1 / 5*</td></tr>
+          <tr><td>Відновлення після помилки</td><td class="num-cell num-na">—</td><td class="num-cell num-1">2</td><td class="num-cell">3</td><td class="num-cell">3</td><td class="num-cell num-5">5</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="callout">— = немає живого групового режиму (WebQuiz.net). * Heads Up! — 1 для того, хто тримає телефон, 5 для решти компанії.</p>
+
+    <h3>Скріншоти</h3>
+    <div class="gallery">
+      <figure><img src="screens/guessong-home-quota-notice.png" alt="GuessSong головна з попередженням про квоту" loading="lazy"><figcaption>GuessSong.app — банер вичерпання Spotify-квоти</figcaption></figure>
+      <figure><img src="screens/guessong-setup-buzzer-mode.png" alt="GuessSong налаштування Buzzer Mode" loading="lazy"><figcaption>GuessSong.app — per-player Buzzer Mode</figcaption></figure>
+      <figure><img src="screens/webquiz-music-home.png" alt="WebQuiz каталог музичних квізів" loading="lazy"><figcaption>WebQuiz.net — каталог квізів</figcaption></figure>
+      <figure><img src="screens/webquiz-quiz-detail-coins.png" alt="WebQuiz картка квізу" loading="lazy"><figcaption>WebQuiz.net — картка квізу</figcaption></figure>
+      <figure><img src="screens/webquiz-quiz-live-multiplechoice.png" alt="WebQuiz гра в дії" loading="lazy"><figcaption>WebQuiz.net — гра в дії</figcaption></figure>
+      <figure><img src="screens/kahoot-join-pin.png" alt="Kahoot join за PIN" loading="lazy"><figcaption>Kahoot! — join за PIN без логіну</figcaption></figure>
+      <figure><img src="screens/kahoot-discover-nologin.png" alt="Kahoot Discover без логіну" loading="lazy"><figcaption>Kahoot! — публічний Discover</figcaption></figure>
+      <figure><img src="screens/kahoot-pricing-tiers.png" alt="Kahoot тіери" loading="lazy"><figcaption>Kahoot! — тіери One Max/Ultra</figcaption></figure>
+      <figure><img src="screens/heardle-app-redirects-to-spotify.png" alt="Heardle редірект" loading="lazy"><figcaption><span class="flag">[?]</span> Heardle — домен веде на Spotify</figcaption></figure>
+      <figure><img src="screens/hitster-marketing-home.png" alt="Hitster маркетинг" loading="lazy"><figcaption>Hitster — маркетинговий сайт</figcaption></figure>
+      <figure><img src="screens/hitster-interactive-tracklist-widget.png" alt="Hitster плеєр-віджет" loading="lazy"><figcaption>Hitster — інтерактивний плеєр на сайті</figcaption></figure>
+      <figure><img src="screens/hitster-appstore-listing.jpg" alt="Hitster App Store" loading="lazy"><figcaption><span class="flag">[?]</span> Hitster — App Store лістинг</figcaption></figure>
+      <figure><img src="screens/songpop-googleplay-listing.png" alt="SongPop Google Play" loading="lazy"><figcaption><span class="flag">[?]</span> SongPop — Google Play лістинг</figcaption></figure>
+      <figure><img src="screens/songpop-official-website.png" alt="SongPop сайт запаркований" loading="lazy"><figcaption>SongPop — офіційний сайт запаркований на продаж</figcaption></figure>
+      <figure><img src="screens/spotify-jam-support-article.png" alt="Spotify Jam довідка" loading="lazy"><figcaption><span class="flag">[?]</span> Spotify Jam — офіційна довідкова стаття</figcaption></figure>
+      <figure><img src="screens/spotify-blend-support-article.png" alt="Spotify Blend довідка" loading="lazy"><figcaption><span class="flag">[?]</span> Spotify Blend — офіційна довідкова стаття</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 03 PATTERNS ================= -->
+<section id="patterny">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="section-num">03</p>
+      <h2>Патерни</h2>
+      <p class="section-sub">Що об'єднує всі сім продуктів — і де вони справді розходяться так, що це впливає на рішення БАЗ.</p>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <h4>3 спільні патерни</h4>
+        <ol class="numbered">
+          <li>Вхід гравця завжди безкоштовний і без реєстрації — складність/оплата лягають на хоста.
+            <div class="callout"><b>Для БАЗ:</b> інвестувати в UX варто насамперед у флоу ведучого.</div>
+          </li>
+          <li>Короткий фрагмент 5–20с — усталений стандарт розпізнавання, не випадковість.
+            <div class="callout"><b>Для БАЗ:</b> підтверджує дефолт 15–20с — не експериментувати з довшими кліпами.</div>
+          </li>
+          <li>Жоден живий продукт не хостить власні аудіокліпи — ліцензійний ризик реальний і летальний.
+            <div class="callout"><b>Для БАЗ:</b> вибір YouTube IFrame Player — не деталь стеку, а умова виживання.</div>
+          </li>
+        </ol>
+      </div>
+      <div>
+        <h4>3 відмінності</h4>
+        <ol class="numbered">
+          <li>Верифікація відповіді: людина (GuessSong, Hitster, БАЗ) проти механічного списку варіантів (WebQuiz, SongPop, Kahoot).
+            <div class="callout"><b>Для БАЗ:</b> досі відкрите питання — що робити, коли ведучий сам не пам'ятає відповідь.</div>
+          </li>
+          <li>Джерело контенту: чийсь реальний плейліст (GuessSong, Hitster, БАЗ) проти фіксованого каталогу для всіх (решта).
+            <div class="callout"><b>Для БАЗ:</b> це і є ніша, в яку продукт цілиться — не механічна відмінність, а причина існування.</div>
+          </li>
+          <li>Ізоляція квоти між сесіями: GuessSong ділить одну спільну Spotify-квоту на всіх одразу.
+            <div class="callout"><b>Для БАЗ:</b> відкрите архітектурне рішення — спільний ключ YouTube API чи ключ на хоста.</div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 04 VYSNOVKY ================= -->
+<section id="vysnovky">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="section-num">04</p>
+      <h2>Висновки</h2>
+      <p class="section-sub">Що з цього всього напряму впливає на рішення продукту — головний інсайт, відкриті питання і конкретні механіки для MVP.</p>
+    </div>
+
+    <div class="insight">
+      <p class="eyebrow">Головний інсайт</p>
+      <p>Незалежні "вгадай пісню"-продукти масово вмирають від ліцензійних проблем з аудіо (Heardle і майже всі його клони). Це підтверджує рішення грати через YouTube IFrame Player, а не хостити власні аудіокліпи, — не деталь стеку, а те, що визначає, чи проєкт узагалі виживе довгостроково.</p>
+    </div>
+
+    <h4 style="margin-top:36px">3 питання до PM</h4>
+    <ol class="numbered">
+      <li>GuessSong вже має і per-player Buzzer Mode, і Mixed Playlist Mode з бонусом за вгадування власника треку — обидві ключові механіки БАЗ уже існують у прямого конкурента. Чи варто переглянути відмову від ownership-guessing?</li>
+      <li>Хто верифікує відповідь, коли сам ведучий не пам'ятає точну відповідь напам'ять? Чи потрібна підказка на екрані ведучого?</li>
+      <li>SongPop показує: можна мати мільйони завантажень і повністю втратити офіційний сайт при третині 1-зіркових відгуків. Яка мінімальна довгострокова підтримка потрібна БАЗ, щоб не повторити цю траєкторію?</li>
+    </ol>
+
+    <div class="grid-2" style="margin-top:36px">
+      <div class="card">
+        <p class="eyebrow" style="color:var(--good)">Топ-3 механізми в MVP</p>
+        <ol class="numbered">
+          <li><b>GuessSong:</b> "Create Room → вставив лінк → готово", без акаунта — найшвидший шлях від нуля до гри.</li>
+          <li><b>Kahoot:</b> явний reconnect-флоу "Resume as [nickname]" зі збереженням балів — рятує від поганого Wi-Fi на вечірці.</li>
+          <li><b>Heads Up!:</b> ротація ролі вбудована в саму механіку гри, а не як адмін-крок — підтверджує ідею "трясни телефоном → новий ведучий".</li>
+        </ol>
+      </div>
+      <div class="card wontwork">
+        <p class="eyebrow">1 механізм, що НЕ спрацює</p>
+        <p><b>Kahoot: хостинг за акаунтом + платні тіери.</b> Найгірший результат на критерії "делегування ролі хоста" (1/5) — прямо суперечить амбіції "будь-яка незнайома компанія, онбординг з нуля". Обов'язкова реєстрація/оплата вб'є саму ідею ротації ведучого — ядро продукту БАЗ.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Повний текст із джерелами — у <a href="research.md">research.md</a>. Продуктовий бриф — у <a href="../CLAUDE.md">CLAUDE.md</a>.</p>
+  </div>
+</footer>
+
+</body>
+</html>
