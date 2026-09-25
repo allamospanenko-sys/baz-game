@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>БАЗ — Персони та Jobs to be Done</title>
+<style>
+  :root{
+    --bg: #0b0c0f;
+    --bg-raised: #131519;
+    --bg-card: #16181d;
+    --border: #262a31;
+    --text: #e8e9ec;
+    --text-dim: #9aa0ab;
+    --text-faint: #6b7280;
+    --accent: #ffb020;
+    --accent-dim: #7a5a1a;
+    --good: #57c785;
+    --bad: #e15b5b;
+    --mono: "SF Mono", "Cascadia Code", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55; font-size:15px}
+  a{color:var(--accent); text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  header.hero{padding:64px 24px 40px; border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, var(--bg-raised) 0%, var(--bg) 100%)}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px}
+  header.hero .wrap{padding:0}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 12px}
+  h1{font-size:clamp(28px,4vw,42px); margin:0 0 12px; letter-spacing:-.01em}
+  .lede{color:var(--text-dim); max-width:680px; font-size:16px; margin:0}
+  .meta{margin-top:24px; display:flex; gap:20px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; color:var(--text-faint)}
+  .meta span b{color:var(--text-dim); font-weight:600}
+
+  nav.toc{position:sticky; top:0; z-index:10; background:rgba(11,12,15,.92);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--border)}
+  nav.toc .wrap{display:flex; gap:4px; overflow-x:auto; padding:0 24px}
+  nav.toc a{display:block; padding:14px 16px; color:var(--text-dim); font-size:13px;
+    white-space:nowrap; border-bottom:2px solid transparent}
+  nav.toc a:hover{color:var(--text); text-decoration:none}
+
+  section{padding:56px 0; border-bottom:1px solid var(--border)}
+  section:last-of-type{border-bottom:none}
+  section > .wrap > .section-head{margin-bottom:32px}
+  .section-num{font-family:var(--mono); color:var(--accent); font-size:13px; margin:0 0 8px}
+  h2{font-size:26px; margin:0 0 8px; letter-spacing:-.01em}
+  .section-sub{color:var(--text-dim); max-width:700px; margin:0}
+  h3{font-size:17px; margin:36px 0 12px}
+  h3:first-child{margin-top:0}
+  h4{font-size:14px; margin:24px 0 10px; color:var(--accent); font-family:var(--mono);
+    text-transform:uppercase; letter-spacing:.04em}
+
+  .scrollbox{overflow-x:auto; border:1px solid var(--border); border-radius:10px; background:var(--bg-card)}
+  table{border-collapse:collapse; width:100%; font-size:13px; min-width:900px}
+  th, td{text-align:left; padding:11px 13px; border-bottom:1px solid var(--border); vertical-align:top}
+  thead th{background:var(--bg-raised); color:var(--text-dim); font-weight:600;
+    font-size:11px; text-transform:uppercase; letter-spacing:.04em; position:sticky; top:0}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:rgba(255,255,255,.02)}
+  td b, td strong{color:var(--text)}
+
+  .card{background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:20px 22px; margin-bottom:14px}
+  .card p:last-child{margin-bottom:0}
+  .card-title{font-size:15px; margin:0 0 8px; color:var(--text); font-weight:600}
+  .callout{margin-top:12px; padding:10px 14px; background:var(--bg-raised);
+    border-left:3px solid var(--accent); border-radius:0 6px 6px 0; font-size:13.5px; color:var(--text-dim)}
+  .callout b{color:var(--accent); font-weight:600}
+  .callout.warn{border-left-color:var(--bad)}
+  .callout.warn b{color:var(--bad)}
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media (max-width:820px){.grid-2{grid-template-columns:1fr}}
+  .pill{display:inline-block; font-family:var(--mono); font-size:11px; padding:2px 8px;
+    border-radius:99px; border:1px solid var(--border); color:var(--text-faint); margin-bottom:10px}
+  .insight{background:linear-gradient(135deg, var(--bg-card), var(--bg-raised));
+    border:1px solid var(--accent-dim); border-radius:12px; padding:24px 26px}
+  .insight p{margin:0 0 10px; font-size:15.5px}
+  .insight p:last-child{margin-bottom:0}
+  .role-who{color:var(--text-dim); font-size:12.5px}
+  .qual{display:block; margin-top:6px; font-family:var(--mono); font-size:11.5px;
+    color:var(--text-faint); line-height:1.45; border-left:2px solid var(--border); padding-left:10px}
+  footer{padding:32px 0 64px; color:var(--text-faint); font-size:13px}
+  footer a{color:var(--text-dim)}
+
+  /* ——— специфічне для цієї сторінки ——— */
+  .b{display:inline-block; font-family:var(--mono); font-size:10px; letter-spacing:.03em;
+    padding:2px 7px; border-radius:4px; margin:0 5px 4px 0; white-space:nowrap}
+  .b-direct{background:rgba(87,199,133,.13); color:var(--good); border:1px solid rgba(87,199,133,.32)}
+  .b-comp{background:rgba(255,176,32,.11); color:var(--accent); border:1px solid var(--accent-dim)}
+  .b-derived{background:rgba(154,160,171,.10); color:var(--text-dim); border:1px solid var(--border)}
+  .b-q, .b-hyp{background:rgba(225,91,91,.13); color:var(--bad); border:1px solid rgba(225,91,91,.34)}
+
+  .card.primary{border-color:var(--accent); background:linear-gradient(135deg, var(--bg-card), rgba(255,176,32,.04))}
+  .card.hypo{border-color:rgba(225,91,91,.4); background:rgba(225,91,91,.04)}
+  .tag-primary{display:inline-block; font-family:var(--mono); font-size:10px; letter-spacing:.08em;
+    text-transform:uppercase; padding:3px 9px; border-radius:99px;
+    background:var(--accent); color:#0b0c0f; font-weight:700; margin-left:8px; vertical-align:2px}
+
+  ol.numbered{padding-left:0; list-style:none; margin:0; counter-reset:item}
+  ol.numbered li{counter-increment:item; position:relative; padding-left:40px; margin-bottom:16px}
+  ol.numbered li:last-child{margin-bottom:0}
+  ol.numbered li::before{
+    content:counter(item); position:absolute; left:0; top:-1px;
+    font-family:var(--mono); font-size:13px; color:var(--accent);
+    width:26px; height:26px; border:1px solid var(--accent-dim); border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .job{background:var(--bg-card); border:1px solid var(--border); border-radius:10px;
+    padding:18px 20px; margin-bottom:12px}
+  .job.main{border-color:var(--accent); background:linear-gradient(135deg, var(--bg-card), rgba(255,176,32,.05))}
+  .job.core{border-color:var(--good); background:linear-gradient(135deg, var(--bg-card), rgba(87,199,133,.045))}
+  .job.crit{border-style:dashed; border-color:var(--accent-dim)}
+  .job-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:10px}
+  .job-code{font-family:var(--mono); font-size:12px; color:var(--accent); font-weight:600}
+  .job-name{font-size:15px; font-weight:600}
+  .job-core-tag{font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+    padding:2px 8px; border-radius:99px; background:rgba(87,199,133,.16); color:var(--good);
+    border:1px solid rgba(87,199,133,.35)}
+  .job-q{margin:0 0 10px; font-size:15px; color:var(--text); border-left:3px solid var(--accent);
+    padding-left:14px; font-style:normal}
+  .job-src{font-size:13px; color:var(--text-dim); margin:0}
+  .job-src b{color:var(--text)}
+
+  .lvl{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--text-faint); margin:30px 0 12px; display:flex; align-items:center; gap:12px}
+  .lvl::after{content:""; flex:1; height:1px; background:var(--border)}
+
+  .s{font-family:var(--mono); font-weight:700; font-size:14px}
+  .s3{color:var(--good)} .s2{color:var(--accent)} .sq{color:var(--bad)}
+  td .why{display:block; font-size:11.5px; color:var(--text-faint); font-family:var(--mono);
+    line-height:1.4; margin-top:3px}
+  .legend{display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--text-dim);
+    margin-bottom:18px; font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">БАЗ · дослідження користувачів</p>
+    <h1>Персони та Jobs to be Done</h1>
+    <p class="lede">Чотири персони, дванадцять jobs і матриця їх важливості — зібрані з desk-аналізу 12 продуктів і ~60 цитат реальних людей. Доказовість нерівна, і на цій сторінці вона позначена всюди, де нерівна.</p>
+    <div class="meta">
+      <span><b>4</b> персони · 1 primary</span>
+      <span><b>12</b> jobs + 1 критерій</span>
+      <span><b>3</b> в ядрі MVP</span>
+      <span><b>27</b> із 48 клітинок матриці — [?]</span>
+      <span><b>0</b> українських голосів у базі</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#personas">01 · Персони</a>
+    <a href="#jobs">02 · Jobs</a>
+    <a href="#matrix">03 · Матриця</a>
+    <a href="#core">04 · Ядро MVP</a>
+  </div>
+</nav>
+
+<!-- ============ 01 ПЕРСОНИ ============ -->
+<section id="personas">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="section-num">01</p>
+      <h2>Персони</h2>
+      <p class="section-sub">Нерівні за доказовістю — і це головне, що треба знати до того, як на них спиратись. П1 і П2 стоять на прямих цитатах, П3 наполовину виведена, П4 майже повністю гіпотеза.</p>
+    </div>
+
+    <div class="legend">
+      <span><span class="b b-direct">ПРЯМО</span> факт від людей</span>
+      <span><span class="b b-comp">КОНКУРЕНТ</span> виміряно на продукті</span>
+      <span><span class="b b-derived">ВИВЕДЕНО</span> висновок без джерела</span>
+      <span><span class="b b-q">[?]</span> даних немає</span>
+    </div>
+
+    <div class="callout warn" style="margin-bottom:24px">
+      <b>Спільна межа всіх чотирьох:</b> українських голосів у базі нуль. Уся пряма мова — з англомовного Reddit, з перекосом у настільників-хобістів і Spotify-користувачів. Це <b>не</b> «довільна незнайома компанія» з брифу.
+    </div>
+
+    <div class="card primary">
+      <p class="pill">П1 · вечірка з друзями, повторювана</p>
+      <p class="card-title">«Каталог закінчився»<span class="tag-primary">primary</span></p>
+      <p>Ініціатор, який <b>уже грає</b> в музичні вгадайки і впёрся в стелю коробки. Приходить не з порожнього місця, а з середини категорії — і вже платив, неодноразово.</p>
+
+      <h4>Jobs</h4>
+      <p class="role-who">Свіжий матеріал, щоб вечір не був повтором · не купувати ще одну коробку, а підставити свою музику · щоб гра завелась без пояснення правил.</p>
+
+      <h4>Найбільше болить</h4>
+      <p class="role-who"><b>Каталог закінчується</b> <span class="b b-direct">ПРЯМО</span> · обхідний шлях коштує день роботи <span class="b b-direct">ПРЯМО</span> · розширення лише відтерміновують проблему <span class="b b-direct">ПРЯМО</span> · GuessSong вимагає готовий плейліст, 2/5 <span class="b b-comp">КОНКУРЕНТ</span></p>
+
+      <h4>Тригери довіри</h4>
+      <p class="role-who"><b>Переконує:</b> безкоштовність (щойно каталог скінчився — друкує своє, а не докуповує) · нуль реєстрації · старт без проміжних кроків · чесний рахунок.<br>
+      <b>Відлякує:</b> агресивні пейволи · видима крихкість інфраструктури · підозра, що гру скоро вб'ють.</p>
+
+      <span class="qual">«After getting <b>overly familiar with the songs from our two boxes</b>, we started making our own PNP using the Bopster.app webpage.» — r/boardgames, [8]</span>
+
+      <div class="callout"><b>Чому primary:</b> найкраща доказова база з чотирьох · уже в категорії, звичку створювати не треба · доведено платить · <b>активно шукає</b> — треди «Similar games to Hitster?» це люди, які гуглять розв'язок зараз.</div>
+      <div class="callout warn"><b>Ризик вибору:</b> П1 — хобіст-настільник, а бриф цілиться в будь-яку незнайому компанію. Це різні люди, і оптимізація під одного не тотожна оптимізації під іншого.</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <p class="pill">П2 · момент, коли компанія вже сіла грати</p>
+        <p class="card-title">«Мене не пускає стрімінг»</p>
+        <p>Хоче грати, але екосистема відрізає: немає Premium, або Apple Music, або безкоштовний тариф. Зафіксовано щонайменше в трьох незалежних тредах.</p>
+
+        <h4>Jobs</h4>
+        <p class="role-who">Бути в грі нарівні з усіма · перевірити одразу, без встановлення й оплати · щоб гра пережила наступний рік.</p>
+
+        <h4>Найбільше болить</h4>
+        <p class="role-who">Пряме виключення з гри <span class="b b-direct">ПРЯМО</span> · Hitster без Premium дає 20 с <span class="b b-comp">КОНКУРЕНТ</span> · гра вмирає на очах: «playlists invalid», «spotify nerfed it» <span class="b b-direct">ПРЯМО</span></p>
+
+        <h4>Тригери довіри</h4>
+        <p class="role-who"><b>Переконує:</b> відкриття за посиланням без акаунта · веб замість застосунку.<br>
+        <b>Відлякує:</b> згадка Premium на вході · необхідність щось встановлювати.</p>
+
+        <span class="qual">«<b>Would you make one with YouTube music??</b> This is like exactly what I was looking to play but I don't have Spotify 😭» — r/spotify</span>
+
+        <div class="callout"><b>Що дає стеку:</b> друга, продуктова причина обрати YouTube. На вечірці 3–8 людей достатньо однієї людини без Premium, щоб момент не склався.</div>
+      </div>
+
+      <div class="card">
+        <p class="pill">П3 · вечірка з друзями, ротація ведучого</p>
+        <p class="card-title">«Моя черга вести»</p>
+        <p>У БАЗ це не одна людина на вечір, а кожен по черзі — і кожен ведучий новачок, бо досвід не накопичується всередині сесії <span class="b b-derived">ВИВЕДЕНО</span></p>
+
+        <h4>Jobs</h4>
+        <p class="role-who">Провести раунд, не вивчаючи інтерфейс · щоб компанія впізнала мій трек · швидко зарахувати відповідь, не тримаючи три рішення разом.</p>
+
+        <h4>Найбільше болить</h4>
+        <p class="role-who">Три рішення одночасно, 2/5 навантаження <span class="b b-comp">КОНКУРЕНТ</span> · раунд провисає, коли трек ніхто не знає <span class="b b-direct">ПРЯМО</span> · помилку ніде відкотити, Kahoot 2/5 <span class="b b-comp">КОНКУРЕНТ</span> · роль хоста прибита до акаунта, 1/5 <span class="b b-comp">КОНКУРЕНТ</span></p>
+
+        <h4>Тригери довіри</h4>
+        <p class="role-who"><b>Переконує:</b> ротація як частина гри, а не адмін-крок · явний reconnect зі збереженням досягнутого.<br>
+        <b>Відлякує:</b> реєстрація й платні тіери на шляху до ролі хоста.</p>
+
+        <span class="qual">«I had the exact same problem playing Hitster with friends. <b>Half the time someone didn't know the song and the round kinda fell flat.</b>» — r/playwire</span>
+
+        <div class="callout warn"><b>Головне попередження:</b> емоційне ядро продукту — Б2 «свій смак під ударом» — <b>гіпотеза</b>. У ~60 цитатах його не згадав ніхто; названий людьми мотив зовсім інший — вичерпання каталогу.</div>
+      </div>
+    </div>
+
+    <div class="card hypo">
+      <p class="pill">П4 · корпоратив / айсбрейкер для незнайомих</p>
+      <p class="card-title">«Мені треба зайняти цих людей» <span class="b b-hyp">ГІПОТЕЗА</span> <span class="b b-q">нуль голосів</span></p>
+      <p>Організатор події за розкладом. <b>Читати як гіпотезу, не як персону.</b> Єдина опора — ринок такої послуги існує і за неї платять: ArtMuz продає музичну вікторину на корпоратив, PubQuiz Kyiv проводить регулярні події. Сегмент поза скоупом MVP.</p>
+
+      <h4>Jobs — усі гіпотези</h4>
+      <p class="role-who"><span class="b b-q">[?]</span> Готовий сценарій, щоб не імпровізувати · <span class="b b-q">[?]</span> активність, що перемішує незнайомих · <span class="b b-q">[?]</span> щоб не залежало від того, хто що встановив.</p>
+
+      <h4>Болі</h4>
+      <p class="role-who">Kahoot: платить завжди хост, €19–39/міс <span class="b b-comp">КОНКУРЕНТ</span> · <span class="b b-q">[?]</span> ціна живої послуги — прайсинг не діставали · для БАЗ потрібно, щоб <b>кожен</b> із 5–8 ведучих мав готовий плейліст на YouTube Music — для групи незнайомих майже напевно не виконується <span class="b b-derived">ВИВЕДЕНО</span></p>
+
+      <div class="callout warn"><b>Цитати немає — і це сама по собі знахідка:</b> сегмент, який платить живі гроші, єдиний, від якого ми не почули нічого. А механіка «кожен приносить свій плейліст» працює проти нього найсильніше.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 02 JOBS ============ -->
+<section id="jobs">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="section-num">02</p>
+      <h2>Ієрархія jobs</h2>
+      <p class="section-sub">Формат «Коли [ситуація], я хочу [мотивація], щоб [результат]». У формулюваннях немає назв функцій — тільки прогрес людини. Job на припущенні — у «Гіпотезах». Вимога до якості, що не описує прогрес, — у «Критеріях приймання», не серед jobs.</p>
+    </div>
+
+    <p class="lvl">Main job</p>
+    <div class="job main">
+      <div class="job-head"><span class="job-code">MAIN</span><span class="job-name">Наш власний матеріал, щоб не набридло</span></div>
+      <p class="job-q">«Коли ми вкотре зібрались тією самою компанією, я хочу зайняти всіх спільною грою, матеріал для якої приносимо ми самі, щоб вечір щоразу був іншим і не впирався в те, що ми вже все знаємо.»</p>
+      <p class="job-src"><b>П1.</b> <span class="b b-direct">ПРЯМО</span> Ситуація: «after work once a week». Мотивація: «went through all the cards». Результат від протилежного: 12 аматорських вгадайок довкола Hitster існують тому, що job не закритий — у 7 із 12 підтверджено роботу з власним матеріалом.</p>
+      <div class="callout"><b>Двигун job — вичерпання, не смак.</b> Матеріал закінчується і в цілком мейнстрімної компанії, тому мотив ширший, ніж «немейнстрімна аудиторія».</div>
+    </div>
+
+    <p class="lvl">Критерій приймання до main job</p>
+    <div class="job crit">
+      <div class="job-head"><span class="job-code">К1</span><span class="job-name">Гра не зупиняється між спробами</span><span class="b b-derived">не job</span></div>
+      <p class="job-src"><b>Чому не job:</b> формулювання «між спробами» вже передбачає нашу структуру раундів — воно прив'язане до рішення, а не до життя людини. Ніхто не наймає продукт заради відсутності пауз; наймають, щоб вечір тримався.</p>
+      <span class="qual">«Generally <b>a lot of time waste between rounds which made me close the tab</b>. Which is a shame because i love the concept but <b>UX needs work</b>.» — [98] апвоутів, найсильніший одиничний сигнал вибірки</span>
+      <div class="callout warn"><b>Межа доказу:</b> коментар стосується щоденної соло-вебгри, не вечіркової. «Closed the tab» — соло-поведінка; компанія в кімнаті так із гри не виходить. Перенесення в наш контекст — припущення.</div>
+      <div class="callout"><b>Чим закривається:</b> наступний трек стартує сам, без дії «далі» · черга й фрагменти підвантажені наперед · рішення ведучого в один тап · стеля часу на трек · фрагмент починається з упізнаваного місця · рахунок оновлюється у фоні · перепідключення не ставить гру на паузу.<br>Майже все — <b>відсутність зайвого кроку</b>. Це й підтверджує, що це критерій якості, а не job.</div>
+    </div>
+
+    <p class="lvl">Related jobs</p>
+
+    <div class="job core">
+      <div class="job-head"><span class="job-code">R1</span><span class="job-name">Прибрати підготовку</span><span class="job-core-tag">ядро MVP</span></div>
+      <p class="job-q">«Коли я хочу, щоб грала саме наша музика, я хочу не готувати її окремим проєктом заздалегідь, щоб бажання зіграти і сама гра були одним рухом.»</p>
+      <p class="job-src"><b>П1.</b> <span class="b b-direct">ПРЯМО</span> «It took <b>about a day</b> for about 300 songs». <span class="b b-comp">КОНКУРЕНТ</span> Нульову підготовку ринок давати вміє — WebQuiz, Jackbox, Heads Up! мають <b>5/5</b>, але тільки з чужим каталогом. Із <b>власним</b> матеріалом найкраще у вибірці — GuessSong <b>2/5</b>. Розрив лежить у перетині двох умов, а не в швидкості старту.</p>
+    </div>
+
+    <div class="job core">
+      <div class="job-head"><span class="job-code">R2</span><span class="job-name">Нікого не залишити за бортом</span><span class="job-core-tag">ядро MVP</span></div>
+      <p class="job-q">«Коли компанія сідає грати, я хочу, щоб участь не залежала від того, хто чим слухає музику, щоб ніхто не опинився глядачем не зі своєї волі.»</p>
+      <p class="job-src"><b>П2.</b> <span class="b b-direct">ПРЯМО</span> Топ-коментар: «for <b>free users as well</b>». Людина, що збиралась купити й не купила: «I <b>would probably have as many as you</b>, but I don't have premium Spotify». <span class="b b-comp">КОНКУРЕНТ</span> Без підписки Hitster дає лише 20-секундні уривки.</p>
+    </div>
+
+    <div class="job">
+      <div class="job-head"><span class="job-code">R3</span><span class="job-name">Дати шанс упізнати</span></div>
+      <p class="job-q">«Коли звучить уривок, я хочу впізнати музику з перших секунд, щоб у мене був шанс, а не відчуття, що завдання неможливе.»</p>
+      <p class="job-src"><b>П3 і всі, хто грає.</b> <span class="b b-direct">ПРЯМО</span> «instead of <b>starting the song at the very start, maybe should start near the more iconic hooks</b>». Соціальний наслідок, коли шансу немає: «<b>Half the time someone didn't know the song and the round kinda fell flat</b>».</p>
+    </div>
+
+    <div class="job core">
+      <div class="job-head"><span class="job-code">R4</span><span class="job-name">Не втратити вечір через збій</span><span class="job-core-tag">ядро MVP</span></div>
+      <p class="job-q">«Коли я випав через зв'язок або сів телефон, я хочу повернутись у гру там, де вона йде, щоб мене не викреслило з вечора.»</p>
+      <p class="job-src"><b>П3 і П2.</b> <span class="b b-direct">ПРЯМО</span> Єдина точка зриву, про яку люди <b>самі попросили</b> — спільнотний запит у Kahoot дозволити перепідключення без втрати досягнутого. Що буває інакше: «Games don't even load sometimes and <b>I got a loss from a game I already won</b>»; «took about <b>6-7 minutes</b> to claim rewards».</p>
+    </div>
+
+    <div class="job">
+      <div class="job-head"><span class="job-code">R5</span><span class="job-name">Вести, не перестаючи бути учасником</span></div>
+      <p class="job-q">«Коли моя черга вести, я хочу не розриватись між кількома речами одночасно, щоб я теж був на цьому вечорі гостем, а не оператором.»</p>
+      <p class="job-src"><b>П3.</b> <span class="b b-comp">КОНКУРЕНТ</span> Виміряно: у GuessSong хост у дефолті одночасно слухає музику, стежить, хто вигукнув, і суддить — найгірший показник когнітивного навантаження у вибірці, <b>2/5</b>. Для БАЗ ціна вища: ведучих за вечір N, і кожен новачок.</p>
+      <div class="callout warn"><b>Прямої цитати ведучого у вибірці немає</b> — job тримається на вимірюванні, не на голосі.</div>
+    </div>
+
+    <p class="lvl">Emotional jobs</p>
+
+    <div class="job">
+      <div class="job-head"><span class="job-code">E1</span><span class="job-name">Пережити момент упізнавання</span></div>
+      <p class="job-q">«Коли звучить те, чого я давно не чув, я хочу на секунду зупинитись на цьому, щоб пережити впізнавання, а не просто зарахувати відповідь.»</p>
+      <p class="job-src"><b>Усі, найсильніше П1.</b> <span class="b b-direct">ПРЯМО</span> «<b>It's jogging memory of a bunch of songs I want to save!</b>»; «its genuinely a fun game where <b>you can discover music you'd have otherwise</b> [missed]».</p>
+      <div class="callout warn"><b>База вузька — дві цитати.</b> Схожі за настроєм репліки з тредів про вгадування <b>року</b> сюди не зараховані: там емоція від дати випуску, а не від упізнавання треку.</div>
+      <div class="callout"><b>Ні бриф, ні research цього job не називають</b> — а в цитатах він звучить поряд зі змагальним мотивом.</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="job">
+        <div class="job-head"><span class="job-code">E2</span><span class="job-name">Побути добрим у тому, у чому я добрий</span></div>
+        <p class="job-q">«Коли грає музика, яку я знаю, я хочу вгадувати далі, щоб вечір тримався на тому, у чому я сильний.»</p>
+        <p class="job-src"><b>П1.</b> <span class="b b-direct">ПРЯМО</span> «I love Hitster. <b>If you know music even just a little, you love this game.</b> ...next year this game is going to break in my top 10».</p>
+      </div>
+      <div class="job">
+        <div class="job-head"><span class="job-code">E3</span><span class="job-name">Не бути тим, через кого все стало</span></div>
+        <p class="job-q">«Коли щось пішло не так під час моєї черги, я хочу мати можливість це виправити, щоб вечір не зупинився на мені.»</p>
+        <p class="job-src"><b>П3.</b> <span class="b b-comp">КОНКУРЕНТ</span> Виміряно: відновлення після помилки хоста 2/5, не можна пауза під час активного відліку. <span class="b b-derived">ВИВЕДЕНО</span> Саме відчуття — прямої цитати немає.</p>
+      </div>
+    </div>
+
+    <p class="lvl">Social jobs</p>
+
+    <div class="job">
+      <div class="job-head"><span class="job-code">S1</span><span class="job-name">Сперечатись, а не мовчки відповідати</span></div>
+      <p class="job-q">«Коли ми не сходимось у тому, що це було, я хочу мати про що посперечатись, щоб суперечка сама стала розвагою.»</p>
+      <p class="job-src"><b>П1.</b> <span class="b b-derived">ВИВЕДЕНО З ЧУЖОГО СПОСТЕРЕЖЕННЯ</span> Джерело — <b>заголовок промо-поста розробника</b> власної гри: «Turns out people prefer arguing with their friends over playing». Це не голос гравця, а твердження автора про свій продукт. Підтвердження від самих гравців у вибірці немає.</p>
+    </div>
+
+    <div class="job">
+      <div class="job-head"><span class="job-code">S2</span><span class="job-name">Тримати всіх в одній кімнаті, а не в телефонах</span></div>
+      <p class="job-q">«Коли ми разом, я хочу, щоб ми дивились одне на одного, а не кожен у свій екран.»</p>
+      <p class="job-src"><b>П1, П4.</b> Перша половина — <span class="b b-derived">ВИВЕДЕНО З ЧУЖОГО СПОСТЕРЕЖЕННЯ</span> промо-пост розробника tvOS-застосунку, зацікавлена сторона: «Most music trivia apps <b>turn the room into a bunch of people staring at their own phones</b>». Друга — <span class="b b-direct">ПРЯМО</span> справжній голос: «<b>If this was an app I could cast to my TV would have been perfect</b>».</p>
+      <div class="callout warn"><b>Підтверджено бажання спільного екрана</b>, а не тезу «телефони в руках руйнують кімнату» — її не підтверджує ніхто, крім зацікавленої сторони.</div>
+    </div>
+
+    <div class="job">
+      <div class="job-head"><span class="job-code">S3</span><span class="job-name">Грати разом попри різницю поколінь</span></div>
+      <p class="job-q">«Коли за столом люди різного віку, я хочу, щоб у кожного був рівний шанс, щоб нікому не було нудно чекати.»</p>
+      <p class="job-src"><b>П4, частково П1.</b> <span class="b b-direct">ПРЯМО</span> «I have to <b>play team with my kid</b>»; «It <b>falls flat with either the really old or really young</b>»; «I'm 30 ... songs made <b>before I was born</b>».</p>
+      <div class="callout"><b>Межа аудиторії проходить не по віку, а по збігу матеріалу з віком</b> — прямий аргумент у напругу «немейнстрім vs для всіх».</div>
+    </div>
+
+    <p class="lvl">Гіпотези — не переносити в основний список без перевірки</p>
+    <div class="scrollbox">
+      <table>
+        <thead><tr><th style="width:44%">Гіпотеза у форматі job</th><th style="width:10%">Персона</th><th>Статус доказу</th></tr></thead>
+        <tbody>
+          <tr><td>«Коли грає моя музика, я хочу побачити реакцію друзів на неї, щоб зрозуміти, як мій смак виглядає збоку.»</td><td>П3</td><td><span class="b b-q">[?]</span> Це біль <b>Б2 — емоційне ядро продукту</b>. У ~60 цитатах його не згадав ніхто; названий людьми мотив зовсім інший (вичерпання). <b>Найвищий пріоритет перевірки.</b></td></tr>
+          <tr><td>«Коли розмова затихла, а розходитись рано, я хочу швидко чимось зайняти компанію, щоб вечір не згас.»</td><td>П1, П4</td><td><span class="b b-derived">ВИВЕДЕНО</span> Біль Б1. Що люди роблять у цей момент сьогодні — <span class="b b-q">[?]</span></td></tr>
+          <tr><td>«Коли за вечір грає музика кожного, я хочу, щоб черга дійшла і до мене, щоб я теж отримав свій момент.»</td><td>П3</td><td><span class="b b-derived">ВИВЕДЕНО</span> Наслідок Б2, а сам Б2 — гіпотеза. Падає разом із ним.</td></tr>
+          <tr><td>«Коли я тихіший за інших, я хочу все одно встигати відповідати, щоб не стати глядачем.»</td><td>П4, П3</td><td><span class="b b-derived">ВИВЕДЕНО</span> Біль Б5. Жодної цитати про «перекрикування» у вибірці немає.</td></tr>
+          <tr><td>«Коли в групі люди, не знайомі між собою, я хочу заняття, яке їх перемішає, щоб зняти незручність.»</td><td>П4</td><td><span class="b b-q">[?]</span> Нуль голосів організаторів подій — єдиний сегмент із доведеною платоспроможністю, від якого ми не почули нічого.</td></tr>
+          <tr><td>«Коли я не впізнав музику, я хочу, щоб це минуло легко, щоб не почуватись єдиним, хто не в темі.»</td><td>усі</td><td><span class="b b-derived">ВИВЕДЕНО</span> Дані є лише про те, що раунд «falls flat», не про сором.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 03 МАТРИЦЯ ============ -->
+<section id="matrix">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="section-num">03</p>
+      <h2>JTBD-матриця</h2>
+      <p class="section-sub">Рядки — jobs, колонки — персони. Оцінка стоїть, тільки якщо під неї є доказ; інакше <span class="b b-q">[?]</span> — не усереднена й не «логічна» оцінка.</p>
+    </div>
+
+    <div class="legend">
+      <span><span class="s s3">3</span> визначає поведінку</span>
+      <span><span class="s s2">2</span> важливий, не визначальний</span>
+      <span><span class="s sq">[?]</span> даних про важливість немає</span>
+      <span><span class="b b-derived">ВИВЕДЕНО</span> оцінка з висновку, не з голосу людини</span>
+    </div>
+
+    <div class="scrollbox">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:15%">Job</th>
+            <th style="width:13%">П1 <span style="color:var(--accent)">primary</span></th>
+            <th style="width:11%">П2 стрімінг</th>
+            <th style="width:11%">П3 веду</th>
+            <th style="width:11%">П4 подія</th>
+            <th style="width:17%">Функція, що закриває</th>
+            <th>Конкуренти закривають?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>MAIN</b> Власний матеріал, щоб не набридло</td>
+            <td><span class="s s3">3</span><span class="why">«went through all the cards»</span></td>
+            <td><span class="s s3">3</span><span class="why">«exactly what I was looking to play» — та сама людина</span></td>
+            <td><span class="s sq">[?]</span><span class="why">його біль — механіка ведення</span></td>
+            <td><span class="s sq">[?]</span><span class="why">для незнайомої групи радше бар'єр</span></td>
+            <td>Імпорт плейліста з YouTube Music за посиланням</td>
+            <td><b>Частково.</b> GuessSong — так, але на Spotify. 7 із 12 аматорських — так, але це колоди до фізичної гри. Hitster — ні</td>
+          </tr>
+          <tr>
+            <td><b>R1</b> Прибрати підготовку <span class="job-core-tag">ядро</span></td>
+            <td><span class="s s3">3</span><span class="why">«about a day for 300 songs»</span></td>
+            <td><span class="s s2">2</span><span class="why">шукає веб без встановлення</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s s3">3</span><span class="why">ВИВЕДЕНО · contentprep×N ведучих</span></td>
+            <td>Вставив лінк → готово, без акаунта</td>
+            <td><b>Частково — і це ключове.</b> Нульову підготовку дають <b>5/5</b>: WebQuiz, Jackbox, Heads Up! — але з чужим каталогом. Із власним матеріалом найкраще — GuessSong <b>2/5</b></td>
+          </tr>
+          <tr>
+            <td><b>R2</b> Нікого не залишити за бортом <span class="job-core-tag">ядро</span></td>
+            <td><span class="s s2">2</span><span class="why">«would probably have as many as you, but…»</span></td>
+            <td><span class="s s3">3</span><span class="why">визначальний · топ-коментар треду</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s s3">3</span><span class="why">ВИВЕДЕНО · екосистеми гарантовано різні</span></td>
+            <td>YouTube як джерело + звук лише на пристрої ведучого</td>
+            <td><b style="color:var(--good)">НІ — ніхто.</b> Усі сім на Spotify/Apple/власному каталозі. Hitster без Premium — 20 с</td>
+          </tr>
+          <tr>
+            <td><b>R3</b> Дати шанс упізнати</td>
+            <td><span class="s s2">2</span><span class="why">«falls flat with the really old or young»</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s s3">3</span><span class="why">«half the time someone didn't know the song»</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td>Точка старту фрагмента <i>(не визначена ні в research, ні в брифі)</i></td>
+            <td><b>Частково.</b> WebQuiz/SongPop/Kahoot — фіксовані варіанти; Heardle — прогресія 1→16 с</td>
+          </tr>
+          <tr>
+            <td><b>R4</b> Не втратити вечір через збій <span class="job-core-tag">ядро</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s s2">2</span><span class="why">бачить, як гра вмирає</span></td>
+            <td><span class="s s3">3</span><span class="why">люди самі просили reconnect</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td>Повернення в кімнату за тим самим лінком</td>
+            <td><b>Так, лідером.</b> Kahoot: явний «Resume as [nickname]» <b>5/5</b>. GuessSong — <b>2/5</b></td>
+          </tr>
+          <tr>
+            <td><b>R5</b> Вести, не перестаючи бути учасником</td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s s3">3</span><span class="why">виміряно: 3 рішення разом, 2/5</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td>Баззер знімає «хто перший» + live-індикатор + рішення в один тап</td>
+            <td><b>Ні.</b> GuessSong <b>2/5</b> у дефолті, <b>3/5</b> з Buzzer Mode — і це найкраще серед ігор із живим суддею</td>
+          </tr>
+          <tr>
+            <td><b>E1</b> Пережити момент упізнавання</td>
+            <td><span class="s s3">3</span><span class="why">«jogging memory of songs I want to save»</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><b>Немає.</b> Найближче — текстова анімація в стилі Stories, але вона задумана як оформлення</td>
+            <td><b>Ні явно.</b> Hitster дає побічно, SongPop — через дискавері. Ніхто не проєктує під це</td>
+          </tr>
+          <tr>
+            <td><b>E2</b> Побути добрим у тому, у чому я добрий</td>
+            <td><span class="s s3">3</span><span class="why">«if you know music even just a little…»</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td>Видимий результат вгадування</td>
+            <td><b>Так, усі.</b> Базова обіцянка жанру — не диференціатор</td>
+          </tr>
+          <tr>
+            <td><b>E3</b> Не бути тим, через кого все стало</td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s s2">2</span><span class="why">виміряно 2/5 · відчуття ВИВЕДЕНО</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td>Можливість перезапустити трек / скасувати рішення</td>
+            <td><b>Ні.</b> Kahoot <b>2/5</b>. Heads Up! 5/5 лише через відсутність стану</td>
+          </tr>
+          <tr>
+            <td><b>S1</b> Сперечатись, а не мовчки відповідати</td>
+            <td><span class="s s3">3</span><span class="why">джерело слабке — промо-пост розробника</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><b>Немає.</b> Продукт вважає суперечку побічним ефектом</td>
+            <td><b>Так, але офлайн.</b> Hitster, PubQuiz. Жоден <b>цифровий</b> — ні</td>
+          </tr>
+          <tr>
+            <td><b>S2</b> В одній кімнаті, а не в телефонах</td>
+            <td><span class="s s2">2</span><span class="why">«cast to my TV» — підтверджена половина</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s s2">2</span><span class="why">ВИВЕДЕНО · айсбрейкер саме про це</span></td>
+            <td>⚠️ <b style="color:var(--bad)">Працює проти:</b> топологія «екран у кожного»</td>
+            <td><b>Так — фізичні.</b> Hitster і Heads Up! закривають повністю. Kahoot — ні, та сама топологія, що в нас</td>
+          </tr>
+          <tr>
+            <td><b>S3</b> Грати попри різницю поколінь</td>
+            <td><span class="s s2">2</span><span class="why">«play team with my kid»</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s sq">[?]</span></td>
+            <td><span class="s s3">3</span><span class="why">ВИВЕДЕНО · різновіковість за замовчуванням</span></td>
+            <td>Матеріал приносить сама компанія → автоматично влучає у свій вік</td>
+            <td><b>Так, краще за нас.</b> Hitster виграв глобально на мейнстрімі: <b>20–99</b>, 30+ країн</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn" style="margin-top:20px">
+      <b>Як читати порожнечу:</b> <span class="b b-q">[?]</span> — це <b>27 клітинок із 48</b>, і це не недбалість заповнення, а стан бази. <b>П3</b> має оцінки лише там, де є виміряні дані про тягар хоста в конкурентів — про нього самого людей ми не чули. <b>П4</b> не має жодної оцінки з голосу людини. <b>П2</b> оцінений лише там, де він сам говорив — у чотирьох рядках із дванадцяти.
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 ЯДРО ============ -->
+<section id="core">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="section-num">04</p>
+      <h2>Ядро MVP і що на виліт</h2>
+      <p class="section-sub">Три jobs, на які спирається реліз, і фічі з брифу, що не закривають жодного job.</p>
+    </div>
+
+    <div class="insight">
+      <p class="eyebrow">Ядро MVP · R1 + R2 + R4</p>
+      <p>Усі три стоять на <b>прямих цитатах</b>, а не на виведенні — це найкраще доказово забезпечений набір із можливих.</p>
+      <p><b>Ціна вибору явна:</b> R4 не є диференціатором — Kahoot закриває його на 5/5. Ядро складається з двох переваг (R1, R2) і однієї обов'язкової умови (R4), без якої дві перші не встигнуть спрацювати.</p>
+    </div>
+
+    <div class="grid-2" style="margin-top:20px">
+      <div class="card">
+        <p class="pill">1</p>
+        <p class="card-title">R1 — Прибрати підготовку</p>
+        <p class="role-who">П1 = <b>3</b>. Ринок уміє давати нульову підготовку (5/5), але тільки з чужим каталогом; із власним матеріалом найкраще — 2/5. БАЗ цілиться рівно в перетин двох умов, якого сьогодні не існує.</p>
+      </div>
+      <div class="card">
+        <p class="pill">2</p>
+        <p class="card-title">R2 — Нікого не залишити за бортом</p>
+        <p class="role-who"><b>Єдиний рядок матриці, де не закриває ніхто із семи конкурентів.</b> Для П1 лише 2 — але діра унікальна, а обраний стек закриває її безкоштовно.</p>
+      </div>
+    </div>
+    <div class="card">
+      <p class="pill">3</p>
+      <p class="card-title">R4 — Не втратити вечір через збій</p>
+      <p class="role-who"><b>Єдиний job, про який люди попросили самі</b>, а не який ми вичитали між рядків. Пряма опора на мету MVP з брифу: «зіграти повноцінну сесію <b>без багів, що зривають гру</b>». Для вечіркового формату другої спроби немає — компанія просто перемикається на інше заняття.</p>
+    </div>
+
+    <h3>Що свідомо не в ядрі</h3>
+    <div class="scrollbox">
+      <table style="min-width:640px">
+        <thead><tr><th style="width:22%">Job</th><th>Чому не в ядрі</th></tr></thead>
+        <tbody>
+          <tr><td><b>E1</b> Момент упізнавання</td><td>П1 = 3, і <b>ніхто в жанрі під це не проєктує</b> — найдешевший спосіб не бути схожим на 12 безкоштовних аналогів. Але база — <b>дві цитати</b>; для опори MVP замало. Лишається як job, не як зобов'язання релізу. <b>Кандидат №1 на підвищення після перевірки.</b></td></tr>
+          <tr><td><b>R5</b> Вести й бути учасником</td><td>П3 = 3 і ринок не закриває, але доказ лише виміряний на конкуренті — прямого голосу ведучого немає.</td></tr>
+          <tr><td><b>S1</b> Сперечатись</td><td>П1 = 3, але джерело слабке (промо-пост розробника), а офлайн це вже закрито Hitster і PubQuiz.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Функції-кандидати на виліт</h3>
+    <div class="scrollbox">
+      <table style="min-width:760px">
+        <thead><tr><th style="width:24%">Функція з брифу</th><th style="width:30%">Який job закриває</th><th>Вердикт</th></tr></thead>
+        <tbody>
+          <tr><td><b>Ритуал «трясни телефоном»</b> (DeviceMotion)</td><td><b style="color:var(--bad)">Жодного.</b> Жоден job не про спосіб приєднання</td><td><b style="color:var(--bad)">🔴 На виліт.</b> Додає залежність від сенсорів і дозволів заради оформлення. У дослідженні — <b>нуль згадок ніде</b>, жест не тестувався ні на кому</td></tr>
+          <tr><td><b>Рандомний вибір ведучого щогри</b></td><td><b style="color:var(--bad)">Жодного.</b> Ротація тримається на Б2 — гіпотезі</td><td>🟡 <b>Під питання.</b> Не вирізати механіку, але не будувати на ній церемонію, поки Б2 не перевірено</td></tr>
+          <tr><td><b>Гранульовані бали</b> 1 за виконавця, +1 за назву</td><td>Частково E2; сама гранульованість — жодного</td><td>🟡 <b>Спростити.</b> Жоден job не про точність рахунку, а два рівні балів прямо порушують критерій <b>К1</b> (рішення ведучого в один тап)</td></tr>
+          <tr><td><b>Фіксовані 15 треків</b> у раунді</td><td><b style="color:var(--bad)">Жодного.</b> Довжина обґрунтована наслідком Б2</td><td>🟡 <b>Під питання.</b> Падає разом із Б2. К1 натомість вимагає керувати <b>простоєм</b>, а не кількістю треків</td></tr>
+          <tr><td><b>Текстова анімація</b> в стилі Stories</td><td>Жодного <i>як задумано</i> — це оформлення відтворення</td><td><b style="color:var(--good)">🟢 Не вирізати — перепризначити.</b> Єдиний наявний кандидат закрити <b>E1</b>: зараз супроводжує звучання, а job вимагає, щоб вона обслуговувала <b>секунду впізнавання</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout" style="margin-top:16px"><b>Що НЕ кандидат на виліт:</b> баззер і live-індикатор «хто відповідає» — вони закривають <b>R5</b>. Обґрунтування виміряне: у GuessSong дефолтний режим дає хосту 2/5 когнітивного навантаження, з Buzzer Mode — 3/5. Це не питання чесності; біль Б5 «виграє найгучніший», яким їх теж підпирали, лишається ВИВЕДЕНО і в ядро не входить.</div>
+
+    <h3>Що матриця показала такого, чого не було видно в списку</h3>
+    <ol class="numbered">
+      <li><b>Жоден job ядра не вимагає нової механіки.</b> R1 — перетин двох умов, якого ринок не дає. R2 — діра, у яку продукт потрапив побічним ефектом вибору стеку, а не наміром. R4 — надійність, яку конкурент уже вміє. Перевага БАЗ лежить у <b>комбінації</b>, а не в винаході.</li>
+      <li><b>Диференціація і надійність у ядрі розведені.</b> R1 і R2 відрізняють продукт; R4 лише дозволяє їм спрацювати. Якщо ресурсу забракне, скорочувати треба R4 останнім — без нього вечір ламається, і два інші jobs стають неважливими.</li>
+      <li><b>Найяскравіший job лишився за бортом ядра.</b> E1 — єдине, під що не проєктує ніхто в жанрі, але дві цитати не тримають MVP. Це свідомий обмін яскравості на доказовість, і його варто переглянути одразу після першої тестової гри.</li>
+      <li><b>Три фічі з тринадцяти тримаються на Б2</b> — рандомний вибір ведучого, фіксовані 15 треків і сама ротація між іграми. Б2 — гіпотеза, яку не підтвердив ніхто, тож її перевірка визначає приблизно чверть скоупу.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Джерела й повні тексти — <a href="user%20research/personas.md">personas.md</a> · <a href="user%20research/jtbd.md">jtbd.md</a> · <a href="user%20research/reddit-voices.md">reddit-voices.md</a> · <a href="user%20research/people-evidence.md">people-evidence.md</a> · <a href="research.md">research.md</a> · <a href="research.html">аналіз ринку</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
